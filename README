@@ -18,7 +18,7 @@ sources simultaneously.
 
 * Usage
 
-./wishlist <amazon wishlist URL>
+./wishlist { <amazon wishlist URL> | -f <file with one amazon link per line> }
 
 To experiment with my wishlist:
 

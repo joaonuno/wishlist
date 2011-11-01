@@ -10,11 +10,36 @@ require 'rubygems'
 require 'hpricot'
 require 'open-uri'
 require 'peach'
+require 'optparse'
+
+options = {}
+
+optparse = OptionParser.new do|opts|
+	opts.banner = "Usage: wishlist {<amazon wishlist url> | -f input.txt}"
+	options[:inputfile] = nil
+	opts.on( '-f', '--file FILE', 'Read books from FILE' ) do|file|
+		options[:inputfile] = file
+	end
+ 
+	opts.on( '-h', '--help', 'Display this screen' ) do
+		puts opts
+		exit
+	end
+end
+
+optparse.parse!
+
+puts "Reading books from #{options[:inputfile]}" if options[:inputfile]
 
 
 def fetch_wishlist(url)
   doc = open(url) { |f| Hpricot(f) }
   (doc/"span.productTitle//a").map { |a| [a.inner_html, a.attributes['href'].scan(/dp\/(\d+X?)/)[0]] }
+end
+
+def read_books(file)
+	books = File.open(file).readlines
+	books.map { |b| [b.scan(/amazon\.com\/(.*)\/dp/)[0][0], b.scan(/dp\/(\d+X?)/)[0][0]] }
 end
 
 
@@ -24,14 +49,12 @@ engines = [AmazonEngine.new('amazon.com', CurrencyConverter.new(:usd)),
            BookDepositoryEngine.new('bookdepository.com', 'bookdep.com'),
            BookDepositoryEngine.new('bookdepository.co.uk', 'bookdep.co.uk')]
 
-if ARGV.length != 1
-    puts "Usage: wishlist <amazon wishlist url>"
-    exit
+if options[:inputfile].nil?
+	wishlist_url = ARGV[0]
+	books = fetch_wishlist(wishlist_url)
+else
+	books = read_books(options[:inputfile])
 end
-
-wishlist_url = ARGV[0]
-
-books = fetch_wishlist(wishlist_url)
 
 printf(" " * 40)
 for engine in engines

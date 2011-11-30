@@ -9,11 +9,11 @@ class AmazonEngine < Engine
 
   def lookup(isbn)
     doc = open("http://#{@name}/s/?field-keywords=#{isbn}") { |f| Hpricot(f) }
-
-    path = ['span.saleprice', 'span.sr_price'].find do |path| 
+    path = ['span.price'].find do |path| 
       begin
         (doc/path).first.inner_html
-      rescue
+      rescue Exception => e
+	print "Error running script: " + e
       end
     end
 
